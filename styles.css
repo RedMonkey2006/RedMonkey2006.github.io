@@ -1,10 +1,55 @@
-<!DOCTYPE html> 
-<html> 
-<head> 
- <link href="mystyle.css" rel="stylesheet" type="text/css" > 
-</head> 
-<body> 
- <h1>HEADING HELLO EARTH</h1> 
- <p>External CSS: External CSS contains separate CSS file which contains only style property with the help of tag attributes (For example class, id, heading, … etc). CSS property written in a separate file with . css extension and should be linked to the HTML document using link tag.</p> 
-</body> 
-</html>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+.game-container {
+    position: relative;
+    width: 400px;
+    height: 300px;
+    background-color: #333;
+    overflow: hidden;
+}
+
+.paddle {
+    position: absolute;
+    width: 10px;
+    height: 60px;
+    background-color: #fff;
+}
+
+#player1 {
+    left: 10px;
+    top: 120px;
+}
+
+#player2 {
+    right: 10px;
+    top: 120px;
+}
+
+.ball {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    border-radius: 50%;
+}
+
+.controls {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.controls button {
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
