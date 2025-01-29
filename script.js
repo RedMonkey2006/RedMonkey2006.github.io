@@ -87,11 +87,11 @@ function resetBall() {
 
 // Управление ракеткой игрока
 upButton.addEventListener('mousedown', () => {
-    player1Y = Math.max(player1Y - 200, 0); // Увеличили шаг до 20
+    player1Y = Math.max(player1Y - 100, 0); // Увеличили шаг до 20
 });
 
 downButton.addEventListener('mousedown', () => {
-    player1Y = Math.min(player1Y + 200, GAME_HEIGHT - PADDLE_HEIGHT); // Увеличили шаг до 20
+    player1Y = Math.min(player1Y + 100, GAME_HEIGHT - PADDLE_HEIGHT); // Увеличили шаг до 20
 });
 
 // Запуск игры
