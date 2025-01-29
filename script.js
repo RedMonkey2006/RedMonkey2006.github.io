@@ -16,6 +16,12 @@ let ballY = 145;
 let ballSpeedX = 4;
 let ballSpeedY = 4;
 
+// Функция для получения случайного направления
+function getRandomDirection() {
+    // Возвращает 1 или -1 (случайное направление)
+    return Math.random() > 0.5 ? 1 : -1;
+}
+
 function update() {
     // Обновляем позицию мяча
     ballX += ballSpeedX;
@@ -59,9 +65,13 @@ function update() {
 }
 
 function resetBall() {
+    // Сбрасываем мяч в центр
     ballX = GAME_WIDTH / 2 - BALL_SIZE / 2;
     ballY = GAME_HEIGHT / 2 - BALL_SIZE / 2;
-    ballSpeedX = -ballSpeedX;
+
+    // Задаем случайное направление
+    ballSpeedX = 4 * getRandomDirection(); // Случайное направление по X
+    ballSpeedY = 4 * getRandomDirection(); // Случайное направление по Y
 }
 
 // Управление ракеткой игрока
@@ -74,4 +84,5 @@ downButton.addEventListener('mousedown', () => {
 });
 
 // Запуск игры
+resetBall(); // Устанавливаем начальное направление мяча
 update();
