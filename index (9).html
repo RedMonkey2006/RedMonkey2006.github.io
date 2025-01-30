@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Pong</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* ... предыдущие стили остаются без изменений ... */
+
+        .donate-banner {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .donate-btn {
+            background: #3390ec;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .donate-btn:hover {
+            background: #2a7bc2;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="donate-banner" id="donateBanner">
+        <span>Поддержите игру!</span>
+        <button class="donate-btn" id="donateButton">🎖 50 звёзд</button>
+        <div class="close-btn" id="closeBanner">✕</div>
+    </div>
+
+    <div class="score">
+        <span id="playerScore">0</span>
+        <span id="botScore">0</span>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls">
+        <div class="control-btn" id="upBtn">↑</div>
+        <div class="control-btn" id="downBtn">↓</div>
+    </div>
+
+    <script>
+        // ... предыдущий код остаётся без изменений ...
+
+        // Инициализация Telegram Web App
+        Telegram.WebApp.ready();
+        
+        // Обработчики для донатной плашки
+        document.getElementById('donateButton').addEventListener('click', handleDonate);
+        document.getElementById('closeBanner').addEventListener('click', () => {
+            document.getElementById('donateBanner').style.display = 'none';
+        });
+
+        // Показ окна доната
+        function handleDonate() {
+            Telegram.WebApp.showPopup({
+                title: 'Поддержка разработчика',
+                message: 'Спасибо за желание поддержать игру!',
+                buttons: [{
+                    id: 'donate50',
+                    type: 'default',
+                    text: '🎖 Отправить 50 звёзд'
+                }, {
+                    type: 'cancel'
+                }]
+            }, (buttonId) => {
+                if(buttonId === 'donate50') {
+                    // Здесь должна быть логика обработки платежа
+                    Telegram.WebApp.openInvoice({
+                        item_id: 'YOUR_INVOICE_ID' // Замените на реальный ID
+                    }, (status) => {
+                        if(status === 'paid') {
+                            Telegram.WebApp.showAlert('Спасибо за поддержку!');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Автоматическое скрытие плашки через 10 секунд
+        setTimeout(() => {
+            document.getElementById('donateBanner').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('donateBanner').style.display = 'none';
+            }, 500);
+        }, 10000);
+    </script>
+</body>
+</html>
