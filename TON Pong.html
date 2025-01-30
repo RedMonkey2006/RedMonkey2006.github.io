@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TON Pong</title>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <style>
+        /* Стили для кошелька */
+        .wallet-panel {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .wallet-btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: Arial;
+            transition: 0.3s;
+            touch-action: manipulation;
+        }
+
+        .wallet-btn.connected {
+            background: #00aa66;
+        }
+
+        .wallet-address {
+            color: white;
+            font-size: 14px;
+            word-break: break-all;
+            text-align: right;
+        }
+
+        /* Остальные стили остаются без изменений */
+    </style>
+</head>
+<body>
+    <div class="wallet-panel">
+        <button class="wallet-btn" id="connectBtn">Connect TON Wallet</button>
+        <div class="wallet-address" id="walletInfo"></div>
+    </div>
+
+    <!-- Остальная часть интерфейса игры -->
+    <div class="score">
+        <span id="playerScore">0</span>
+        <span id="botScore">0</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+        <div class="control-btn" id="upBtn">↑</div>
+        <div class="control-btn" id="downBtn">↓</div>
+    </div>
+
+    <script>
+        // Инициализация TON Connect
+        const connector = new TonConnectSDK.TonConnect({
+            manifestUrl: 'https://yourdomain.com/tonconnect-manifest.json'
+        });
+
+        // Проверка подключения при загрузке
+        async function initWallet() {
+            const wallet = await connector.getWallet();
+            updateWalletUI(wallet);
+            
+            connector.onStatusChange(wallet => {
+                updateWalletUI(wallet);
+                if (wallet) activateRedTheme();
+            });
+        }
+
+        // Обновление интерфейса кошелька
+        function updateWalletUI(wallet) {
+            const btn = document.getElementById('connectBtn');
+            const info = document.getElementById('walletInfo');
+            
+            if (wallet) {
+                btn.classList.add('connected');
+                btn.textContent = 'Disconnect';
+                info.textContent = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
+            } else {
+                btn.classList.remove('connected');
+                btn.textContent = 'Connect TON Wallet';
+                info.textContent = '';
+            }
+        }
+
+        // Обработчик подключения
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            if (await connector.getWallet()) {
+                await connector.disconnect();
+            } else {
+                await connector.connect();
+            }
+        });
+
+        // Активация красной темы после оплаты
+        async function activateRedTheme() {
+            const transaction = {
+                validUntil: Date.now() + 300000,
+                messages: [{
+                    address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', // Тестовый адрес
+                    amount: '1000000' // 0.001 TON
+                }]
+            };
+
+            try {
+                const result = await connector.sendTransaction(transaction);
+                console.log('Transaction successful:', result);
+                document.body.classList.add('red-theme');
+            } catch (error) {
+                console.log('Transaction cancelled:', error);
+            }
+        }
+
+        // Инициализация при загрузке
+        initWallet().catch(console.error);
+
+        // ... Весь предыдущий код игры остается без изменений ...
+    </script>
+</body>
+</html>
