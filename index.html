@@ -2,104 +2,220 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Pong</title>
-    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <title>Classic Pong</title>
     <style>
-        /* Добавляем стили для кошелька */
-        .wallet-container {
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #gameCanvas {
+            background: #000;
+            touch-action: none;
+        }
+        
+        .controls {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            touch-action: none;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            touch-action: none;
+            user-select: none;
+        }
+        
+        .score {
             position: fixed;
             top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .wallet-btn {
-            background: #0088cc;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 40px;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 15px;
-            cursor: pointer;
             font-family: Arial;
-            transition: background 0.3s;
-        }
-
-        .wallet-btn.connected {
-            background: #00aa66;
-        }
-
-        .wallet-address {
-            font-size: 12px;
-            color: white;
-            margin-top: 5px;
-            word-break: break-all;
+            user-select: none;
         }
     </style>
 </head>
 <body>
-    <div class="wallet-container">
-        <button class="wallet-btn" id="connectWallet">Connect TON</button>
-        <div class="wallet-address" id="walletAddress"></div>
+    <div class="score">
+        <span id="playerScore">0</span>
+        <span id="botScore">0</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+        <div class="control-btn" id="upBtn">↑</div>
+        <div class="control-btn" id="downBtn">↓</div>
     </div>
 
-    <!-- Остальные элементы (счет, canvas, управление) остаются без изменений -->
-
     <script>
-        // Инициализация TON Connect
-        const connector = new TonConnectSDK.TonConnect({
-            manifestUrl: 'https://yourdomain.com/tonconnect-manifest.json'
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Адаптивный размер холста
+        function resizeCanvas() {
+            canvas.width = Math.min(window.innerWidth, 500);
+            canvas.height = Math.min(window.innerHeight, 800);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Игровые константы
+        const paddleHeight = canvas.height / 5;
+        const paddleWidth = canvas.width / 30;
+        const ballSize = canvas.width / 50;
+        
+        let playerScore = 0;
+        let botScore = 0;
+        
+        const player = {
+            y: canvas.height / 2 - paddleHeight / 2,
+            speed: 0
+        };
+        
+        const bot = {
+            y: canvas.height / 2 - paddleHeight / 2,
+            speed: 6
+        };
+        
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            speedX: 0,
+            speedY: 0,
+            lastTouch: null
+        };
+        
+        // Управление
+        let moveUp = false;
+        let moveDown = false;
+        
+        document.getElementById('upBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveUp = true;
         });
-
-        // Проверка подключенного кошелька
-        async function checkConnection() {
-            const wallet = await connector.getWallet();
-            if (wallet) {
-                document.getElementById('connectWallet').classList.add('connected');
-                document.getElementById('walletAddress').textContent = 
-                    `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
-            }
-        }
-
-        // Обработчик подключения кошелька
-        document.getElementById('connectWallet').addEventListener('click', async () => {
-            const connectionSource = await connector.connect();
-            if (connectionSource) {
-                checkConnection();
-            }
+        
+        document.getElementById('downBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveDown = true;
         });
+        
+        document.getElementById('upBtn').addEventListener('touchend', () => moveUp = false);
+        document.getElementById('downBtn').addEventListener('touchend', () => moveDown = false);
+        document.getElementById('upBtn').addEventListener('touchcancel', () => moveUp = false);
+        document.getElementById('downBtn').addEventListener('touchcancel', () => moveDown = false);
 
-        // Функция для отправки транзакции
-        async function sendTransaction(amount) {
-            const transaction = {
-                validUntil: Date.now() + 1000000,
-                messages: [
-                    {
-                        address: 'UQDZtA8PMUAioyPaLLRNXNiONepDUwvzUqBhMg7RvHZchqjr', // Замените на свой адрес
-                        amount: amount.toString()
-                    }
-                ]
-            };
+        // Логика бота
+        function moveBot() {
+            const botCenter = bot.y + paddleHeight / 2;
+            const ballFutureY = ball.y + (ball.speedY * (canvas.width - ball.x) / ball.speedX);
+            
+            if(ballFutureY > botCenter + 20) bot.y += bot.speed;
+            if(ballFutureY < botCenter - 20) bot.y -= bot.speed;
+            
+            bot.y = Math.max(0, Math.min(canvas.height - paddleHeight, bot.y));
+        }
 
-            try {
-                const result = await connector.sendTransaction(transaction);
-                console.log('Transaction successful:', result);
-                return true;
-            } catch (error) {
-                console.error('Transaction failed:', error);
-                return false;
+        // Коллизии
+        function checkCollision() {
+            if(ball.speedX < 0 && ball.x - ballSize < paddleWidth && 
+               ball.y > player.y && ball.y < player.y + paddleHeight) {
+                ball.speedX *= -1;
+                ball.speedY = ((ball.y - (player.y + paddleHeight/2)) / (paddleHeight/2)) * 8;
+            }
+            
+            if(ball.speedX > 0 && ball.x + ballSize > canvas.width - paddleWidth && 
+               ball.y > bot.y && ball.y < bot.y + paddleHeight) {
+                ball.speedX *= -1;
+                ball.speedY = ((ball.y - (bot.y + paddleHeight/2)) / (paddleHeight/2)) * 8;
+            }
+            
+            if(ball.y + ballSize > canvas.height || ball.y - ballSize < 0) {
+                ball.speedY *= -1;
             }
         }
 
-        // Инициализация при загрузке
-        checkConnection();
-
-        // Пример использования (активация красной темы)
-        async function activateRedTheme() {
-            const success = await sendTransaction(5000000000); // 5 TON (в нанокоинах)
-            if (success) {
-                document.body.classList.add('red-theme');
-            }
+        // Сброс мяча
+        function resetBall(scorer) {
+            ball.x = scorer === 'player' ? canvas.width - paddleWidth * 3 : paddleWidth * 3;
+            ball.y = canvas.height / 2;
+            
+            const angle = (Math.random() * Math.PI/2) - Math.PI/4;
+            const direction = scorer === 'player' ? -1 : 1;
+            
+            ball.speedX = direction * 8 * Math.cos(angle);
+            ball.speedY = 8 * Math.sin(angle);
+            
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('botScore').textContent = botScore;
         }
+
+        // Основной цикл
+        function gameLoop() {
+            if(moveUp) player.y -= 8;
+            if(moveDown) player.y += 8;
+            player.y = Math.max(0, Math.min(canvas.height - paddleHeight, player.y));
+            
+            moveBot();
+            
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+            
+            checkCollision();
+            
+            if(ball.x + ballSize < 0) {
+                botScore++;
+                resetBall('bot');
+            }
+            if(ball.x - ballSize > canvas.width) {
+                playerScore++;
+                resetBall('player');
+            }
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, player.y, paddleWidth, paddleHeight);
+            ctx.fillRect(canvas.width - paddleWidth, bot.y, paddleWidth, paddleHeight);
+            
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.setLineDash([10, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0);
+            ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        resetBall('player');
+        gameLoop();
     </script>
 </body>
 </html>
