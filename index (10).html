@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TON Pong</title>
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    <style>
+        /* Добавляем стили для кошелька */
+        .wallet-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .wallet-btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: Arial;
+            transition: background 0.3s;
+        }
+
+        .wallet-btn.connected {
+            background: #00aa66;
+        }
+
+        .wallet-address {
+            font-size: 12px;
+            color: white;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="wallet-container">
+        <button class="wallet-btn" id="connectWallet">Connect TON</button>
+        <div class="wallet-address" id="walletAddress"></div>
+    </div>
+
+    <!-- Остальные элементы (счет, canvas, управление) остаются без изменений -->
+
+    <script>
+        // Инициализация TON Connect
+        const connector = new TonConnectSDK.TonConnect({
+            manifestUrl: 'https://yourdomain.com/tonconnect-manifest.json'
+        });
+
+        // Проверка подключенного кошелька
+        async function checkConnection() {
+            const wallet = await connector.getWallet();
+            if (wallet) {
+                document.getElementById('connectWallet').classList.add('connected');
+                document.getElementById('walletAddress').textContent = 
+                    `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
+            }
+        }
+
+        // Обработчик подключения кошелька
+        document.getElementById('connectWallet').addEventListener('click', async () => {
+            const connectionSource = await connector.connect();
+            if (connectionSource) {
+                checkConnection();
+            }
+        });
+
+        // Функция для отправки транзакции
+        async function sendTransaction(amount) {
+            const transaction = {
+                validUntil: Date.now() + 1000000,
+                messages: [
+                    {
+                        address: 'UQDZtA8PMUAioyPaLLRNXNiONepDUwvzUqBhMg7RvHZchqjr', // Замените на свой адрес
+                        amount: amount.toString()
+                    }
+                ]
+            };
+
+            try {
+                const result = await connector.sendTransaction(transaction);
+                console.log('Transaction successful:', result);
+                return true;
+            } catch (error) {
+                console.error('Transaction failed:', error);
+                return false;
+            }
+        }
+
+        // Инициализация при загрузке
+        checkConnection();
+
+        // Пример использования (активация красной темы)
+        async function activateRedTheme() {
+            const success = await sendTransaction(5000000000); // 5 TON (в нанокоинах)
+            if (success) {
+                document.body.classList.add('red-theme');
+            }
+        }
+    </script>
+</body>
+</html>
