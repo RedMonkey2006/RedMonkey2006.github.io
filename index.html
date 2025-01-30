@@ -3,117 +3,239 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mobile Pong</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* ... предыдущие стили остаются без изменений ... */
-
-        .donate-banner {
-            position: fixed;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: #000;
             display: flex;
+            justify-content: center;
             align-items: center;
+            height: 100vh;
+        }
+        
+        #gameCanvas {
+            background: #000;
+            touch-action: none;
+        }
+        
+        .controls {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
             gap: 15px;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            touch-action: none;
         }
-
-        .donate-btn {
-            background: #3390ec;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 15px;
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
             color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
+            touch-action: none;
+            user-select: none;
         }
-
-        .donate-btn:hover {
-            background: #2a7bc2;
-        }
-
-        .close-btn {
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
-
-        .close-btn:hover {
-            opacity: 1;
+        
+        .score {
+            position: fixed;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            font-size: 40px;
+            color: white;
+            font-family: Arial;
+            user-select: none;
         }
     </style>
 </head>
 <body>
-    <div class="donate-banner" id="donateBanner">
-        <span>Поддержите игру!</span>
-        <button class="donate-btn" id="donateButton">🎖 50 звёзд</button>
-        <div class="close-btn" id="closeBanner">✕</div>
-    </div>
-
     <div class="score">
         <span id="playerScore">0</span>
         <span id="botScore">0</span>
     </div>
-    
     <canvas id="gameCanvas"></canvas>
-    
     <div class="controls">
         <div class="control-btn" id="upBtn">↑</div>
         <div class="control-btn" id="downBtn">↓</div>
     </div>
 
     <script>
-        // ... предыдущий код остаётся без изменений ...
-
-        // Инициализация Telegram Web App
-        Telegram.WebApp.ready();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
         
-        // Обработчики для донатной плашки
-        document.getElementById('donateButton').addEventListener('click', handleDonate);
-        document.getElementById('closeBanner').addEventListener('click', () => {
-            document.getElementById('donateBanner').style.display = 'none';
-        });
-
-        // Показ окна доната
-        function handleDonate() {
-            Telegram.WebApp.showPopup({
-                title: 'Поддержка разработчика',
-                message: 'Спасибо за желание поддержать игру!',
-                buttons: [{
-                    id: 'donate50',
-                    type: 'default',
-                    text: '🎖 Отправить 50 звёзд'
-                }, {
-                    type: 'cancel'
-                }]
-            }, (buttonId) => {
-                if(buttonId === 'donate50') {
-                    // Здесь должна быть логика обработки платежа
-                    Telegram.WebApp.openInvoice({
-                        item_id: 'YOUR_INVOICE_ID' // Замените на реальный ID
-                    }, (status) => {
-                        if(status === 'paid') {
-                            Telegram.WebApp.showAlert('Спасибо за поддержку!');
-                        }
-                    });
-                }
-            });
+        // Адаптивный размер холста
+        function resizeCanvas() {
+            canvas.width = Math.min(window.innerWidth, 500);
+            canvas.height = Math.min(window.innerHeight, 800);
         }
-
-        // Автоматическое скрытие плашки через 10 секунд
-        setTimeout(() => {
-            document.getElementById('donateBanner').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('donateBanner').style.display = 'none';
-            }, 500);
-        }, 10000);
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Игровые константы
+        const paddleHeight = canvas.height / 5;
+        const paddleWidth = canvas.width / 30;
+        const ballSize = canvas.width / 50;
+        
+        let playerScore = 0;
+        let botScore = 0;
+        
+        const player = {
+            y: canvas.height / 2 - paddleHeight / 2,
+            speed: 0
+        };
+        
+        const bot = {
+            y: canvas.height / 2 - paddleHeight / 2,
+            speed: 4
+        };
+        
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            speedX: 0,
+            speedY: 0,
+            lastTouch: null
+        };
+        
+        // Текущее состояние управления
+        let moveUp = false;
+        let moveDown = false;
+        
+        // Обработчики тач-событий
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const target = e.target.id;
+            if(target === 'upBtn') moveUp = true;
+            if(target === 'downBtn') moveDown = true;
+        }
+        
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            moveUp = false;
+            moveDown = false;
+        }
+        
+        // Настройка управления
+        document.getElementById('upBtn').addEventListener('touchstart', handleTouchStart);
+        document.getElementById('downBtn').addEventListener('touchstart', handleTouchStart);
+        document.getElementById('upBtn').addEventListener('touchend', handleTouchEnd);
+        document.getElementById('downBtn').addEventListener('touchend', handleTouchEnd);
+        document.getElementById('upBtn').addEventListener('touchcancel', handleTouchEnd);
+        document.getElementById('downBtn').addEventListener('touchcancel', handleTouchEnd);
+        
+        // Логика бота
+        function moveBot() {
+            const botCenter = bot.y + paddleHeight / 2;
+            const ballFutureY = ball.y + (ball.speedY * (canvas.width - ball.x) / ball.speedX);
+            
+            if(ballFutureY > botCenter + 20) bot.y += bot.speed;
+            if(ballFutureY < botCenter - 20) bot.y -= bot.speed;
+            
+            bot.y = Math.max(0, Math.min(canvas.height - paddleHeight, bot.y));
+        }
+        
+        // Коллизии
+        function checkCollision() {
+            // С ракетками
+            if(ball.speedX < 0 && ball.x - ballSize < paddleWidth && 
+               ball.y > player.y && ball.y < player.y + paddleHeight) {
+                ball.speedX *= -1;
+                ball.speedY = ((ball.y - (player.y + paddleHeight/2)) / (paddleHeight/2)) * 8;
+                ball.lastTouch = 'player';
+            }
+            
+            if(ball.speedX > 0 && ball.x + ballSize > canvas.width - paddleWidth && 
+               ball.y > bot.y && ball.y < bot.y + paddleHeight) {
+                ball.speedX *= -1;
+                ball.speedY = ((ball.y - (bot.y + paddleHeight/2)) / (paddleHeight/2)) * 8;
+                ball.lastTouch = 'bot';
+            }
+            
+            // С границами
+            if(ball.y + ballSize > canvas.height || ball.y - ballSize < 0) {
+                ball.speedY *= -1;
+            }
+        }
+        
+        // Сброс мяча
+        function resetBall(scorer) {
+            ball.x = scorer === 'player' ? canvas.width - paddleWidth * 3 : paddleWidth * 3;
+            ball.y = canvas.height / 2;
+            
+            const angle = (Math.random() * Math.PI/2) - Math.PI/4;
+            const direction = scorer === 'player' ? -1 : 1;
+            
+            ball.speedX = direction * 8 * Math.cos(angle);
+            ball.speedY = 8 * Math.sin(angle);
+            
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('botScore').textContent = botScore;
+        }
+        
+        // Основной цикл
+        function gameLoop() {
+            // Движение игрока
+            if(moveUp) player.y -= 8;
+            if(moveDown) player.y += 8;
+            player.y = Math.max(0, Math.min(canvas.height - paddleHeight, player.y));
+            
+            // Движение бота
+            moveBot();
+            
+            // Движение мяча
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+            
+            // Проверка коллизий
+            checkCollision();
+            
+            // Голы
+            if(ball.x + ballSize < 0) {
+                botScore++;
+                resetBall('bot');
+            }
+            if(ball.x - ballSize > canvas.width) {
+                playerScore++;
+                resetBall('player');
+            }
+            
+            // Отрисовка
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Ракетки
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, player.y, paddleWidth, paddleHeight);
+            ctx.fillRect(canvas.width - paddleWidth, bot.y, paddleWidth, paddleHeight);
+            
+            // Мяч
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Центральная линия
+            ctx.setLineDash([10, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0);
+            ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        resetBall('player');
+        gameLoop();
     </script>
 </body>
 </html>
