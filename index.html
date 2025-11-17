@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Твой Кликер ✨</h1>
+        
+        <div class="score-section">
+            <div class="score">Очки: <span id="score">0</span></div>
+            <div class="level">Уровень: <span id="level">1</span></div>
+        </div>
+
+        <button id="clickBtn" class="click-button">КЛИКАЙ!</button>
+        
+        <div class="stats">
+            <div>Кликов в секунду: <span id="cps">1</span></div>
+            <div>Сила клика: <span id="clickPower">1</span></div>
+        </div>
+
+        <div class="shop">
+            <h3>💼 Магазин улучшений</h3>
+            <div class="upgrades">
+                <button class="upgrade-btn" onclick="buyUpgrade('clickPower')">
+                    Усилить клик (10 очков)<br>
+                    +1 к силе клика
+                </button>
+                <button class="upgrade-btn" onclick="buyUpgrade('autoClicker')">
+                    Автокликер (50 очков)<br>
+                    +1 клик/сек
+                </button>
+                <button class="upgrade-btn" onclick="buyUpgrade('clickMultiplier')">
+                    Умножитель (100 очков)<br>
+                    x2 все клики
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
