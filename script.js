@@ -74,7 +74,6 @@ function startAutoClicker() {
             gameState.score += autoPoints;
             updateDisplay();
             
-            // Показываем автоклики в консоли для отладки
             if (autoPoints > 0) {
                 console.log(Автоклик! +${autoPoints} очков);
             }
@@ -236,6 +235,3 @@ function initGame() {
 
 // Запуск игры когда страница загружена
 document.addEventListener('DOMContentLoaded', initGame);
-
-// Для отладки - выводим состояние игры в консоль
-window.getGameState = () => gameState;
