@@ -1,126 +1,47 @@
-let gameState = {
-    score: 0,
-    level: 1,
-    clickPower: 1,
-    autoClicker: 0,
-    clickMultiplier: 1,
-    upgrades: {
-        clickPower: { baseCost: 10, cost: 10 },
-        autoClicker: { baseCost: 50, cost: 50 },
-        clickMultiplier: { baseCost: 100, cost: 100 }
-    }
-};
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Твой Кликер ✨</h1>
+        
+        <div class="score-section">
+            <div class="score">Очки: <span id="score">0</span></div>
+            <div class="level">Уровень: <span id="level">1</span></div>
+        </div>
 
+        <button id="clickBtn" class="click-button">КЛИКАЙ!</button>
+        
+        <div class="stats">
+            <div>Кликов в секунду: <span id="cps">0</span></div>
+            <div>Сила клика: <span id="clickPower">1</span></div>
+        </div>
 
-const elements = {
-    score: document.getElementById('score'),
-    level: document.getElementById('level'),
-    clickPower: document.getElementById('clickPower'),
-    cps: document.getElementById('cps'),
-    clickBtn: document.getElementById('clickBtn'),
-    costElements: {
-        clickPower: document.getElementById('clickPowerCost'),
-        autoClicker: document.getElementById('autoClickerCost'),
-        multiplier: document.getElementById('multiplierCost')
-    }
-};
+        <div class="shop">
+            <h3>💼 Магазин улучшений</h3>
+            <div class="upgrades">
+                <button class="upgrade-btn" data-type="clickPower">
+                    Усилить клик (<span id="clickPowerCost">10</span> очков)<br>
+                    +1 к силе клика
+                </button>
+                <button class="upgrade-btn" data-type="autoClicker">
+                    Автокликер (<span id="autoClickerCost">50</span> очков)<br>
+                    +1 клик/сек
+                </button>
+                <button class="upgrade-btn" data-type="clickMultiplier">
+                    Умножитель (<span id="multiplierCost">100</span> очков)<br>
+                    x2 все клики
+                </button>
+            </div>
+        </div>
+    </div>
 
-
-function initTelegram() {
-    try {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        console.log('Telegram Web App инициализирован');
-    } catch (error) {
-        console.log('Telegram Web App не доступен, работаем в браузере');
-    }
-}
-
-function setupClickHandler() {
-    elements.clickBtn.addEventListener('click', handleClick);
-    console.log('Обработчик клика установлен');
-}
-
-function handleClick() {
-    const points = gameState.clickPower * gameState.clickMultiplier;
-    gameState.score += points;
-    
-    updateDisplay();
-    animateClick();
-    
-    if (window.navigator.vibrate) {
-        window.navigator.vibrate(50);
-    }
-    
-    console.log(Клик! +${points} очков, всего: ${gameState.score});
-}
-
-function animateClick() {
-    elements.clickBtn.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        elements.clickBtn.style.transform = 'scale(1)';
-    }, 100);
-}
-
-function startAutoClicker() {
-    setInterval(() => {
-        if (gameState.autoClicker > 0) {
-            const autoPoints = gameState.autoClicker * gameState.clickMultiplier;
-            gameState.score += autoPoints;
-            updateDisplay();
-            
-            // Показываем автоклики в консоли для отладки
-            if (autoPoints > 0) {
-                console.log(Автоклик! +${autoPoints} очков);
-            }
-        }
-    }, 1000);
-}
-
-function updateDisplay() {
-    elements.score.textContent = Math.floor(gameState.score);
-    elements.level.textContent = gameState.level;
-    elements.clickPower.textContent = gameState.clickPower * gameState.clickMultiplier;
-    elements.cps.textContent = gameState.autoClicker * gameState.clickMultiplier;
-    
-    elements.costElements.clickPower.textContent = gameState.upgrades.clickPower.cost;
-    elements.costElements.autoClicker.textContent = gameState.upgrades.autoClicker.cost;
-    elements.costElements.multiplier.textContent = gameState.upgrades.clickMultiplier.cost;
-    
-    checkLevel();
-    
-    updateUpgradeButtons();
-}
-
-function checkLevel() {
-    const newLevel = Math.floor(gameState.score / 1000) + 1;
-    if (newLevel > gameState.level) {
-        gameState.level = newLevel;
-        showLevelUpMessage();
-    }
-}
-
-function showLevelUpMessage() {
-    try {
-        Telegram.WebApp.showPopup({
-            title: '🎉 Новый уровень!',
-            message: Ты достиг ${gameState.level} уровня!,
-            buttons: [{ type: 'ok' }]
-        });
-    } catch (error) {
-        alert(🎉 Новый уровень! Ты достиг ${gameState.level} уровня!);
-    }
-}
-
-function setupUpgradeHandlers() {
-    const upgradeButtons = document.querySelectorAll('.upgrade-btn');
-    
-    upgradeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const type = this.getAttribute('data-type');
-            buyUpgrade(type);
-        });
-    });
-    
-    console.log('Обработчики улучшений установлены');
-}
+    <script src="script.js"></script>
+</body>
+</html>
