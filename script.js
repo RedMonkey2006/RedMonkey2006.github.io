@@ -1,3 +1,141 @@
+// Игровые переменные
+let gameState = {
+    score: 0,
+    level: 1,
+    clickPower: 1,
+    autoClicker: 0,
+    clickMultiplier: 1,
+    upgrades: {
+        clickPower: { baseCost: 10, cost: 10 },
+        autoClicker: { baseCost: 50, cost: 50 },
+        clickMultiplier: { baseCost: 100, cost: 100 }
+    }
+};
+
+// Элементы DOM
+const elements = {
+    score: document.getElementById('score'),
+    level: document.getElementById('level'),
+    clickPower: document.getElementById('clickPower'),
+    cps: document.getElementById('cps'),
+    clickBtn: document.getElementById('clickBtn'),
+    costElements: {
+        clickPower: document.getElementById('clickPowerCost'),
+        autoClicker: document.getElementById('autoClickerCost'),
+        multiplier: document.getElementById('multiplierCost')
+    }
+};
+
+// Инициализация Telegram Web App
+function initTelegram() {
+    try {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        console.log('Telegram Web App инициализирован');
+    } catch (error) {
+        console.log('Telegram Web App не доступен, работаем в браузере');
+    }
+}
+
+// Основной клик
+function setupClickHandler() {
+    elements.clickBtn.addEventListener('click', handleClick);
+    console.log('Обработчик клика установлен');
+}
+
+function handleClick() {
+    const points = gameState.clickPower * gameState.clickMultiplier;
+    gameState.score += points;
+    
+    updateDisplay();
+    animateClick();
+    
+    // Вибрация если доступна
+    if (window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+    }
+    
+    console.log(Клик! +${points} очков, всего: ${gameState.score});
+}
+
+// Анимация клика
+function animateClick() {
+    elements.clickBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        elements.clickBtn.style.transform = 'scale(1)';
+    }, 100);
+}
+
+// Автокликер
+function startAutoClicker() {
+    setInterval(() => {
+        if (gameState.autoClicker > 0) {
+            const autoPoints = gameState.autoClicker * gameState.clickMultiplier;
+            gameState.score += autoPoints;
+            updateDisplay();
+            
+            // Показываем автоклики в консоли для отладки
+            if (autoPoints > 0) {
+                console.log(Автоклик! +${autoPoints} очков);
+            }
+        }
+    }, 1000);
+}
+
+// Обновление отображения
+function updateDisplay() {
+    elements.score.textContent = Math.floor(gameState.score);
+    elements.level.textContent = gameState.level;
+    elements.clickPower.textContent = gameState.clickPower * gameState.clickMultiplier;
+    elements.cps.textContent = gameState.autoClicker * gameState.clickMultiplier;
+    
+    // Обновляем цены
+    elements.costElements.clickPower.textContent = gameState.upgrades.clickPower.cost;
+    elements.costElements.autoClicker.textContent = gameState.upgrades.autoClicker.cost;
+    elements.costElements.multiplier.textContent = gameState.upgrades.clickMultiplier.cost;
+    
+    // Проверяем уровень
+    checkLevel();
+    
+    // Обновляем доступность кнопок улучшений
+    updateUpgradeButtons();
+}
+
+// Проверка уровня
+function checkLevel() {
+    const newLevel = Math.floor(gameState.score / 1000) + 1;
+    if (newLevel > gameState.level) {
+        gameState.level = newLevel;
+        showLevelUpMessage();
+    }
+}
+
+// Сообщение о новом уровне
+function showLevelUpMessage() {
+    try {
+        Telegram.WebApp.showPopup({
+            title: '🎉 Новый уровень!',
+            message: Ты достиг ${gameState.level} уровня!,
+            buttons: [{ type: 'ok' }]
+        });
+    } catch (error) {
+        alert(🎉 Новый уровень! Ты достиг ${gameState.level} уровня!);
+    }
+}
+
+// Система улучшений
+function setupUpgradeHandlers() {
+    const upgradeButtons = document.querySelectorAll('.upgrade-btn');
+    
+    upgradeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            buyUpgrade(type);
+        });
+    });
+    
+    console.log('Обработчики улучшений установлены');
+}
 function buyUpgrade(type) {
     const upgrade = gameState.upgrades[type];
     
