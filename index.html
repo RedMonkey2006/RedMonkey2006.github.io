@@ -1,4 +1,3 @@
-// Игровые переменные
 let gameState = {
     score: 0,
     level: 1,
@@ -12,7 +11,7 @@ let gameState = {
     }
 };
 
-// Элементы DOM
+
 const elements = {
     score: document.getElementById('score'),
     level: document.getElementById('level'),
@@ -26,7 +25,7 @@ const elements = {
     }
 };
 
-// Инициализация Telegram Web App
+
 function initTelegram() {
     try {
         Telegram.WebApp.ready();
@@ -37,7 +36,6 @@ function initTelegram() {
     }
 }
 
-// Основной клик
 function setupClickHandler() {
     elements.clickBtn.addEventListener('click', handleClick);
     console.log('Обработчик клика установлен');
@@ -50,7 +48,6 @@ function handleClick() {
     updateDisplay();
     animateClick();
     
-    // Вибрация если доступна
     if (window.navigator.vibrate) {
         window.navigator.vibrate(50);
     }
@@ -58,7 +55,6 @@ function handleClick() {
     console.log(Клик! +${points} очков, всего: ${gameState.score});
 }
 
-// Анимация клика
 function animateClick() {
     elements.clickBtn.style.transform = 'scale(0.95)';
     setTimeout(() => {
@@ -66,7 +62,6 @@ function animateClick() {
     }, 100);
 }
 
-// Автокликер
 function startAutoClicker() {
     setInterval(() => {
         if (gameState.autoClicker > 0) {
@@ -82,26 +77,21 @@ function startAutoClicker() {
     }, 1000);
 }
 
-// Обновление отображения
 function updateDisplay() {
     elements.score.textContent = Math.floor(gameState.score);
     elements.level.textContent = gameState.level;
     elements.clickPower.textContent = gameState.clickPower * gameState.clickMultiplier;
     elements.cps.textContent = gameState.autoClicker * gameState.clickMultiplier;
     
-    // Обновляем цены
     elements.costElements.clickPower.textContent = gameState.upgrades.clickPower.cost;
     elements.costElements.autoClicker.textContent = gameState.upgrades.autoClicker.cost;
     elements.costElements.multiplier.textContent = gameState.upgrades.clickMultiplier.cost;
     
-    // Проверяем уровень
     checkLevel();
     
-    // Обновляем доступность кнопок улучшений
     updateUpgradeButtons();
 }
 
-// Проверка уровня
 function checkLevel() {
     const newLevel = Math.floor(gameState.score / 1000) + 1;
     if (newLevel > gameState.level) {
@@ -110,7 +100,6 @@ function checkLevel() {
     }
 }
 
-// Сообщение о новом уровне
 function showLevelUpMessage() {
     try {
         Telegram.WebApp.showPopup({
@@ -123,7 +112,6 @@ function showLevelUpMessage() {
     }
 }
 
-// Система улучшений
 function setupUpgradeHandlers() {
     const upgradeButtons = document.querySelectorAll('.upgrade-btn');
     
