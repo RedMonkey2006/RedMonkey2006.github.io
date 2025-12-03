@@ -1,49 +1,126 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Кликер</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Исправь пути: -->
-    <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Онлайн калькулятор</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f2f2f2;
+            font-family: Arial, sans-serif;
+        }
+        .calculator {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 260px;
+        }
+        .display {
+            width: 100%;
+            height: 60px;
+            font-size: 28px;
+            text-align: right;
+            padding: 10px;
+            border: none;
+            outline: none;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: #eaeaea;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        button {
+            padding: 15px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            background: #d9d9d9;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #c6c6c6;
+        }
+        .operator {
+            background: #ffb74d;
+        }
+        .operator:hover {
+            background: #ffa726;
+        }
+        .equal {
+            background: #4caf50;
+            color: white;
+        }
+        .equal:hover {
+            background: #43a047;
+        }
+        .clear {
+            background: #e53935;
+            color: white;
+        }
+        .clear:hover {
+            background: #d32f2f;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>✨ Твой Кликер ✨</h1>
-        
-        <div class="score-section">
-            <div class="score">Очки: <span id="score">0</span></div>
-            <div class="level">Уровень: <span id="level">1</span></div>
-        </div>
+    <div class="calculator">
+        <input type="text" class="display" id="display" disabled />
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button onclick="appendValue('(')">(</button>
+            <button onclick="appendValue(')')">)</button>
+            <button class="operator" onclick="appendValue('/')">÷</button>
 
-        <button id="clickBtn" class="click-button">КЛИКАЙ!</button>
-        
-        <div class="stats">
-            <div>Кликов в секунду: <span id="cps">0</span></div>
-            <div>Сила клика: <span id="clickPower">1</span></div>
-        </div>
+            <button onclick="appendValue('7')">7</button>
+            <button onclick="appendValue('8')">8</button>
+            <button onclick="appendValue('9')">9</button>
+            <button class="operator" onclick="appendValue('*')">×</button>
 
-        <div class="shop">
-            <h3>💼 Магазин улучшений</h3>
-            <div class="upgrades">
-                <button class="upgrade-btn" data-type="clickPower">
-                    Усилить клик (<span id="clickPowerCost">10</span> очков)<br>
-                    +1 к силе клика
-                </button>
-                <button class="upgrade-btn" data-type="autoClicker">
-                    Автокликер (<span id="autoClickerCost">50</span> очков)<br>
-                    +1 клик/сек
-                </button>
-                <button class="upgrade-btn" data-type="clickMultiplier">
-                    Умножитель (<span id="multiplierCost">100</span> очков)<br>
-                    x2 все клики
-                </button>
-            </div>
+            <button onclick="appendValue('4')">4</button>
+            <button onclick="appendValue('5')">5</button>
+            <button onclick="appendValue('6')">6</button>
+            <button class="operator" onclick="appendValue('-')">−</button>
+
+            <button onclick="appendValue('1')">1</button>
+            <button onclick="appendValue('2')">2</button>
+            <button onclick="appendValue('3')">3</button>
+            <button class="operator" onclick="appendValue('+')">+</button>
+
+            <button onclick="appendValue('0')">0</button>
+            <button onclick="appendValue('.')">.</button>
+            <button class="equal" onclick="calculate()" style="grid-column: span 2;">=</button>
         </div>
     </div>
 
-    <!-- Исправь путь: -->
-    <script src="./script.js"></script>
+    <script>
+        const display = document.getElementById('display');
+
+        function appendValue(value) {
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        function calculate() {
+            try {
+                display.value = eval(display.value);
+            } catch {
+                display.value = 'Ошибка';
+            }
+        }
+    </script>
 </body>
 </html>
